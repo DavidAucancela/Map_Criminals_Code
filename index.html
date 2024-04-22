@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        
+        <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+        </script>
+        
+        <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+        <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+        <link rel="stylesheet" href="style.css"/>
+        
+        <meta name="viewport" content="width=device-width,
+            initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <style>
+            #map_52508c7f377a857e6f1d8f1fbcb44bdb {
+                position: relative;
+                width: 100.0%;
+                height: 100.0%;
+                left: 0.0%;
+                top: 0.0%;
+            }
+        </style>
+            
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+        <script>
+            function openRightMenu() {
+                document.getElementById("rightMenu").style.display = "block";
+            }
+            function closeRightMenu() {
+                document.getElementById("rightMenu").style.display = "none";
+            }
+        </script>
+        
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    </head>
+
+    <body> 
+        <div class="w3-bar w3-black w3-border"> 
+        <img src="Imagenes/logo.png" class=" " style="height: 3cm;width:5cm; max-width: 50%;" alt="Avatar">        
+        <!-- Ver que opciones podemos aumentar al menú -->
+        <div class="w3-dropdown-hover w3-right">
+            <button class="w3-button">Menú</button>
+            <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                <a href="#" class="w3-bar-item w3-button">Link 1</a>
+                <a href="#" class="w3-bar-item w3-button">Link 2</a>
+                <a href="#" class="w3-bar-item w3-button">Link 3</a>
+            </div>
+        </div>
+        </div>       
+        <main class="content">
+            <div class="faq-container">
+                <h2>Los mas buscados - CODE</h2>
+                    <p id="demo"></p>
+                    <!--Actualización del servidor de la hora-->
+                    <script>
+                        var x = document.getElementById("demo");
+                        var d = new Date();
+                        
+                        var formattedDate = d.toDateString() + ", " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+                        x.innerHTML = "Ultima actulización: " + formattedDate;
+                    </script>
+
+                <details>
+                    <summary>
+                        <h4>Mapa </h4>
+                    </summary>
+                    <div class="card" style="height: 700px;">   
+                        <div class="card-body" id="map_52508c7f377a857e6f1d8f1fbcb44bdb"></div>
+                    </div>
+                </details>
+                
+                <details >
+                <summary>
+                    <h4>Top los mas buscados</h4>
+                </summary>   
+                    <div style='height: 500px; overflow-y: scroll; scroll-behavior: auto;'>
+                        <table class="table table-striped" >
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Foto</th>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Edad</th>
+                                    <th scope="col">Altura</th>
+                                    <th scope="col">Complexión</th>
+                                    <th scope="col">Color de cabello</th>
+                                    <th scope="col">Recompensa</th>
+                                    <th scope="col">Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td><img src="Imagenes/3167755.png" alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Pepe Malo</td>
+                                    <td>25</td>
+                                    <td>1.80 cm.</td>
+                                    <td>Gordo</td>
+                                    <td>Oscuro</td>
+                                    <td>1000</td>
+                                    <td>Se busca por robo a mano armada</td>
+                                </tr>
+                                
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td><img src="Imagenes/3167755.png" alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Pepe Malo</td>
+                                    <td>25</td>
+                                    <td>1.80 cm.</td>
+                                    <td>Gordo</td>
+                                    <td>Oscuro</td>
+                                    <td>1000</td>
+                                    <td>Se busca por robo a mano armada</td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">3</th>
+                                    <td><img src="Imagenes/3167755.png" alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Pepe Malo</td>
+                                    <td>25</td>
+                                    <td>1.80 cm.</td>
+                                    <td>Gordo</td>
+                                    <td>Oscuro</td>
+                                    <td>1000</td>
+                                    <td>Se busca por robo a mano armada</td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">4</th>
+                                    <td><img src="Imagenes/3167755.png" alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Pepe Malo</td>
+                                    <td>25</td>
+                                    <td>1.80 cm.</td>
+                                    <td>Gordo</td>
+                                    <td>Oscuro</td>
+                                    <td>1000</td>
+                                    <td>Se busca por robo a mano armada</td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">5</th>
+                                    <td><img src="Imagenes/3167755.png" alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Pepe Malo</td>
+                                    <td>25</td>
+                                    <td>1.80 cm.</td>
+                                    <td>Gordo</td>
+                                    <td>Oscuro</td>
+                                    <td>1000</td>
+                                    <td>Se busca por robo a mano armada</td>
+                                </tr>
+
+                                
+                            </tbody>
+                        </table>
+                    </div>  
+                </details>  
+                        
+                <details>
+                    <summary>       
+                        <h4>Operaciones o cualquier tema relacionado</h4>     
+                    </summary>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Logo</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Inoformación</th>
+                        </tr>
+                        </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td><img src="Imagenes/operaciones.png " alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Operación Martillo</td>
+                                    <td>La operación martillo es un carro de combate principal utilizado por las fuerzas armadas de varios países, incluyendo los Estados Unidos. Es conocido por su resistencia, poder de fuego y movilidad en el campo de batalla.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">2</th>
+                                    <td><img src="Imagenes/operaciones.png " alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Operación Martillo</td>
+                                    <td>La operación martillo es un carro de combate principal utilizado por las fuerzas armadas de varios países, incluyendo los Estados Unidos. Es conocido por su resistencia, poder de fuego y movilidad en el campo de batalla.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">3</th>
+                                    <td><img src="Imagenes/operaciones.png " alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Operación Martillo</td>
+                                    <td>La operación martillo es un carro de combate principal utilizado por las fuerzas armadas de varios países, incluyendo los Estados Unidos. Es conocido por su resistencia, poder de fuego y movilidad en el campo de batalla.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">4</th>
+                                    <td><img src="Imagenes/operaciones.png " alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Operación Martillo</td>
+                                    <td>La operación martillo es un carro de combate principal utilizado por las fuerzas armadas de varios países, incluyendo los Estados Unidos. Es conocido por su resistencia, poder de fuego y movilidad en el campo de batalla.</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">5</th>
+                                    <td><img src="Imagenes/operaciones.png " alt="" srcset="" class="imagenBuscado"></td>
+                                    <td>Operación Martillo</td>
+                                    <td>La operación martillo es un carro de combate principal utilizado por las fuerzas armadas de varios países, incluyendo los Estados Unidos. Es conocido por su resistencia, poder de fuego y movilidad en el campo de batalla.</td>
+                                </tr>
+                            </tbody>
+                    </table>
+                </details>
+            </div>
+        </main>            
+    </body>
+    <script src="script.js"></script>
+</html>
