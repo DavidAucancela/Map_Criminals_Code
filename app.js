@@ -7,7 +7,7 @@ const TRANSLATIONS = {
     no_reward: 'Sin recompensa',
     crimes_label: 'Crímenes',
     loading: 'Cargando...',
-    no_results: 'Sin resultados para este país.',
+    no_results: 'Sin resultados.',
     persons_found: 'persona(s) encontrada(s)',
     source_fbi: 'Fuente: FBI Most Wanted',
     more_info: 'Más info',
@@ -16,6 +16,16 @@ const TRANSLATIONS = {
     danger_medium: 'MEDIO',
     danger_low: 'BAJO',
     danger_min: 'MÍN',
+    world_total_label: '🌎 Mundo',
+    filter_search_placeholder: 'Buscar por nombre…',
+    filter_crime_all: 'Todos los crímenes',
+    filter_danger_all: 'Todos los niveles',
+    filter_danger_critical: 'CRÍTICO',
+    filter_danger_high: 'ALTO',
+    filter_danger_medium: 'MEDIO',
+    filter_danger_low: 'BAJO',
+    filter_danger_min: 'MÍN',
+    filter_reset: 'Limpiar',
   },
   en: {
     title: "World's Most Wanted",
@@ -24,7 +34,7 @@ const TRANSLATIONS = {
     no_reward: 'No reward',
     crimes_label: 'Crimes',
     loading: 'Loading...',
-    no_results: 'No results for this country.',
+    no_results: 'No results.',
     persons_found: 'person(s) found',
     source_fbi: 'Source: FBI Most Wanted',
     more_info: 'More info',
@@ -33,6 +43,16 @@ const TRANSLATIONS = {
     danger_medium: 'MEDIUM',
     danger_low: 'LOW',
     danger_min: 'MIN',
+    world_total_label: '🌎 World',
+    filter_search_placeholder: 'Search by name…',
+    filter_crime_all: 'All crimes',
+    filter_danger_all: 'All levels',
+    filter_danger_critical: 'CRITICAL',
+    filter_danger_high: 'HIGH',
+    filter_danger_medium: 'MEDIUM',
+    filter_danger_low: 'LOW',
+    filter_danger_min: 'MIN',
+    filter_reset: 'Reset',
   },
 };
 
@@ -70,15 +90,24 @@ const THREAT_COLORS = ['', '#718096', '#00d4aa', '#ffd700', '#ff8c00', '#ff3b3b'
 // ─── State ────────────────────────────────────────────────────────────────────
 let selectedCountry = null;
 let currentItems = [];
-let selectSeq = 0;   // increments each call; lets stale responses self-discard
-let manualData = []; // datos cargados desde data/manual.json
-let manualLoaded = false;
+let manualData = [];
+let filterName   = '';
+let filterCrime  = '';
+let filterDanger = '';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function countryDisplayName(code) {
   const c = COUNTRIES[code];
   if (!c) return code;
   return lang === 'es' ? c.name : c.nameEN;
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
 }
 
 // ─── Build country grid ───────────────────────────────────────────────────────
@@ -102,68 +131,56 @@ function buildCountryGrid() {
   }).join('');
 }
 
-// ─── Cargar datos manuales una sola vez ──────────────────────────────────────
-async function loadManualData() {
-  if (manualLoaded && manualData.length > 0) return manualData;
+// ─── Preload all data once ────────────────────────────────────────────────────
+async function preloadAllData() {
   try {
     const res = await fetch('data/manual.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     manualData = Array.isArray(data) ? data : [];
-    manualLoaded = true;
   } catch (e) {
     console.error('Error cargando data/manual.json:', e);
     manualData = [];
-    manualLoaded = true;
   }
-  return manualData;
+  applyFilters();
 }
 
-// ─── Select a country ─────────────────────────────────────────────────────────
-async function selectCountry(code) {
-  const mySeq = ++selectSeq;   // stamp this call; stale calls self-discard below
-  selectedCountry = code;
-  const c = COUNTRIES[code];
+// ─── Apply filters (central, synchronous) ────────────────────────────────────
+function applyFilters() {
+  let items = manualData.slice();
 
-  // 1. Activate button glow immediately
-  document.querySelectorAll('.country-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.id === `btn-${code}`);
-  });
-
-  // 2. Fire map animations instantly — each wrapped so a Leaflet error can't
-  //    block the fetch that follows
-  try { if (typeof flyToCountry    === 'function') flyToCountry(c.center, c.zoom); }    catch(e) { console.error('flyToCountry error:', e); }
-  try { if (typeof radarPing       === 'function') radarPing(c.center); }              catch(e) { console.error('radarPing error:', e); }
-  try { if (typeof showCountryCircle=== 'function') showCountryCircle(c.center, c.radius); } catch(e) { console.error('showCountryCircle error:', e); }
-
-  // 3. Show loading spinner
-  const resultSection = document.getElementById('panel-result');
-  const loadingEl     = document.getElementById('panel-loading');
-  const listEl        = document.getElementById('wanted-list');
-  const headerEl      = document.getElementById('result-header');
-
-  resultSection.style.display = 'flex';
-  loadingEl.style.display     = 'flex';
-  listEl.innerHTML             = '';
-  headerEl.textContent         = '';
-
-  // 4. Obtener datos desde el archivo local manual.json y filtrar por país
-  let items = [];
-  try {
-    const all = await loadManualData();
-    items = all.filter(p => p.country === code);
-  } catch (e) {
-    console.error('selectCountry data error:', e);
+  if (selectedCountry !== null) {
+    items = items.filter(p => p.country === selectedCountry);
   }
 
-  // Discard if a newer click happened while this was in-flight
-  if (mySeq !== selectSeq) return;
+  if (filterName) {
+    const q = filterName.toLowerCase();
+    items = items.filter(p =>
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
+    );
+  }
+
+  if (filterCrime) {
+    items = items.filter(p => p.crimes && p.crimes.includes(filterCrime));
+  }
+
+  if (filterDanger) {
+    items = items.filter(p => getDangerLevel(p.reward || 0).en === filterDanger);
+  }
 
   currentItems = items;
 
-  // 5. Hide spinner, write header, render cards + markers
-  loadingEl.style.display = 'none';
-  headerEl.textContent = `${c.flag} ${countryDisplayName(code)} — ${currentItems.length} ${t('persons_found')}`;
+  const headerEl = document.getElementById('result-header');
+  if (selectedCountry) {
+    const c = COUNTRIES[selectedCountry];
+    headerEl.textContent = `${c.flag} ${countryDisplayName(selectedCountry)} — ${currentItems.length} ${t('persons_found')}`;
+  } else {
+    headerEl.textContent = `${t('world_total_label')} — ${currentItems.length} ${t('persons_found')}`;
+  }
+
+  document.getElementById('panel-result').style.display = 'flex';
+  document.getElementById('panel-loading').style.display = 'none';
 
   renderWantedList(currentItems);
 
@@ -172,6 +189,62 @@ async function selectCountry(code) {
       addMarkers(currentItems.filter(i => i.lat != null && i.lng != null));
     }
   } catch(e) { console.error('addMarkers error:', e); }
+}
+
+// ─── Build crime filter dropdown ──────────────────────────────────────────────
+function buildCrimeFilter() {
+  const sel = document.getElementById('filter-crime');
+  if (!sel) return;
+  const crimes = new Set();
+  manualData.forEach(p => { if (p.crimes) p.crimes.forEach(c => crimes.add(c)); });
+  const sorted = Array.from(crimes).sort();
+  sel.innerHTML = `<option value="">${t('filter_crime_all')}</option>` +
+    sorted.map(c => `<option value="${c}"${filterCrime === c ? ' selected' : ''}>${c}</option>`).join('');
+}
+
+// ─── Reset filters ────────────────────────────────────────────────────────────
+function resetFilters() {
+  filterName  = '';
+  filterCrime = '';
+  filterDanger = '';
+  const nameEl   = document.getElementById('filter-name');
+  const crimeEl  = document.getElementById('filter-crime');
+  const dangerEl = document.getElementById('filter-danger');
+  if (nameEl)   nameEl.value   = '';
+  if (crimeEl)  crimeEl.value  = '';
+  if (dangerEl) dangerEl.value = '';
+  applyFilters();
+}
+
+// ─── Update filter placeholders for i18n ──────────────────────────────────────
+function updateFilterPlaceholders() {
+  const nameEl = document.getElementById('filter-name');
+  if (nameEl) nameEl.placeholder = t('filter_search_placeholder');
+}
+
+// ─── Select a country (synchronous, toggleable) ───────────────────────────────
+function selectCountry(code) {
+  if (selectedCountry === code) {
+    selectedCountry = null;
+    document.querySelectorAll('.country-btn').forEach(btn => btn.classList.remove('active'));
+    try { if (typeof flyToCountry === 'function') flyToCountry([5, -75], 3); } catch(e) {}
+    try { if (typeof countryCircle !== 'undefined' && countryCircle) { worldMap.removeLayer(countryCircle); countryCircle = null; } } catch(e) {}
+    applyFilters();
+    return;
+  }
+
+  selectedCountry = code;
+  const c = COUNTRIES[code];
+
+  document.querySelectorAll('.country-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === `btn-${code}`);
+  });
+
+  try { if (typeof flyToCountry    === 'function') flyToCountry(c.center, c.zoom); }         catch(e) { console.error('flyToCountry error:', e); }
+  try { if (typeof radarPing       === 'function') radarPing(c.center); }                    catch(e) { console.error('radarPing error:', e); }
+  try { if (typeof showCountryCircle === 'function') showCountryCircle(c.center, c.radius); } catch(e) { console.error('showCountryCircle error:', e); }
+
+  applyFilters();
 }
 
 // ─── Render mini-cards ────────────────────────────────────────────────────────
@@ -202,7 +275,6 @@ function buildMiniCard(item, idx) {
     : t('no_reward');
   const rewardClass = reward > 0 ? 'mini-reward' : 'mini-reward no-reward';
 
-  // Reward progress bar (reward / 10M, capped at 100%)
   const barPct = Math.min(100, (reward / 10000000) * 100).toFixed(1);
 
   const hasCoords = item.lat != null && item.lng != null;
@@ -232,12 +304,9 @@ function toggleLang() {
   document.getElementById('lang-toggle').textContent = lang === 'es' ? 'EN' : 'ES';
   applyI18n();
   buildCountryGrid();
-  if (selectedCountry && currentItems.length > 0) {
-    const c = COUNTRIES[selectedCountry];
-    document.getElementById('result-header').textContent =
-      `${c.flag} ${countryDisplayName(selectedCountry)} — ${currentItems.length} ${t('persons_found')}`;
-    renderWantedList(currentItems);
-  }
+  buildCrimeFilter();
+  updateFilterPlaceholders();
+  applyFilters();
 }
 
 function applyI18n() {
@@ -264,8 +333,41 @@ function startClock() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   applyI18n();
   buildCountryGrid();
   startClock();
+  await preloadAllData();
+  buildCrimeFilter();
+  updateFilterPlaceholders();
+
+  const nameInput  = document.getElementById('filter-name');
+  const crimeSelect  = document.getElementById('filter-crime');
+  const dangerSelect = document.getElementById('filter-danger');
+  const resetBtn     = document.getElementById('filter-reset');
+
+  if (nameInput) {
+    nameInput.addEventListener('input', debounce(e => {
+      filterName = e.target.value.trim();
+      applyFilters();
+    }, 250));
+  }
+
+  if (crimeSelect) {
+    crimeSelect.addEventListener('change', e => {
+      filterCrime = e.target.value;
+      applyFilters();
+    });
+  }
+
+  if (dangerSelect) {
+    dangerSelect.addEventListener('change', e => {
+      filterDanger = e.target.value;
+      applyFilters();
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', resetFilters);
+  }
 });
