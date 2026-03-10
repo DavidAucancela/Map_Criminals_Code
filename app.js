@@ -1,3 +1,44 @@
+// ─── Security helpers ─────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function safeUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : '';
+  } catch {
+    return '';
+  }
+}
+
+// ─── Toast notifications ──────────────────────────────────────────────────────
+function showToast(message, type = 'error') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.setAttribute('role', 'alert');
+  toast.setAttribute('aria-live', 'assertive');
+  toast.textContent = message;
+
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('toast-show'));
+
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 4000);
+}
+
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   es: {
@@ -113,19 +154,25 @@ function debounce(fn, delay) {
 // ─── Build country grid ───────────────────────────────────────────────────────
 function buildCountryGrid() {
   const grid = document.getElementById('country-grid');
+  const threatLabels = { es: ['', 'Mínimo', 'Bajo', 'Medio', 'Alto', 'Crítico'], en: ['', 'Min', 'Low', 'Medium', 'High', 'Critical'] };
   grid.innerHTML = Object.entries(COUNTRIES).map(([code, c]) => {
     const threatColor = THREAT_COLORS[c.threat] || '#718096';
+    const countryName = lang === 'es' ? c.name : c.nameEN;
+    const threatLabel = (threatLabels[lang] || threatLabels.es)[c.threat] || '';
+    const isSelected  = selectedCountry === code;
     return `
       <button
-        class="country-btn ${selectedCountry === code ? 'active' : ''}"
+        class="country-btn ${isSelected ? 'active' : ''}"
         id="btn-${code}"
         onclick="selectCountry('${code}')"
-        title="${lang === 'es' ? c.name : c.nameEN}"
+        title="${countryName}"
+        aria-label="${countryName} — ${lang === 'es' ? 'Amenaza' : 'Threat'}: ${threatLabel}"
+        aria-pressed="${isSelected}"
         style="--threat-color:${threatColor}"
       >
-        <span class="flag">${c.flag}</span>
-        <span class="country-name">${lang === 'es' ? c.name : c.nameEN}</span>
-        <span class="threat-dot" style="background:${threatColor}"></span>
+        <span class="flag" aria-hidden="true">${c.flag}</span>
+        <span class="country-name">${countryName}</span>
+        <span class="threat-dot" style="background:${threatColor}" aria-hidden="true"></span>
       </button>
     `;
   }).join('');
@@ -141,6 +188,9 @@ async function preloadAllData() {
   } catch (e) {
     console.error('Error cargando data/manual.json:', e);
     manualData = [];
+    showToast(lang === 'es'
+      ? 'Error al cargar los datos. Intente recargar la página.'
+      : 'Error loading data. Please reload the page.');
   }
   applyFilters();
 }
@@ -260,11 +310,13 @@ function renderWantedList(items) {
 }
 
 function buildMiniCard(item, idx) {
-  const photoEl = item.photo
-    ? `<img class="mini-photo" src="${item.photo}" alt="${item.name}" onerror="this.outerHTML='<div class=\\'mini-photo-placeholder\\'>👤</div>'" loading="lazy"/>`
+  const safeName  = escapeHtml(item.name);
+  const safePhoto = safeUrl(item.photo);
+  const photoEl = safePhoto
+    ? `<img class="mini-photo" src="${safePhoto}" alt="${safeName}" onerror="this.outerHTML='<div class=\\'mini-photo-placeholder\\'>👤</div>'" loading="lazy"/>`
     : `<div class="mini-photo-placeholder">👤</div>`;
 
-  const topCrime = (item.crimes && item.crimes.length > 0) ? item.crimes[0] : '—';
+  const topCrime = (item.crimes && item.crimes.length > 0) ? escapeHtml(item.crimes[0]) : '—';
 
   const reward = item.reward || 0;
   const danger = getDangerLevel(reward);
@@ -283,11 +335,11 @@ function buildMiniCard(item, idx) {
     : '';
 
   return `
-    <div class="mini-card" ${clickHandler} title="${item.name}" style="--i:${idx}">
+    <div class="mini-card" ${clickHandler} title="${safeName}" style="--i:${idx}">
       ${photoEl}
       <div class="mini-info">
         <div class="mini-name-row">
-          <div class="mini-name">${item.name}</div>
+          <div class="mini-name">${safeName}</div>
           <span class="danger-badge" style="color:${danger.color};background:${danger.bg}">${dangerLabel}</span>
         </div>
         <div class="mini-crime">${topCrime}</div>
@@ -330,6 +382,38 @@ function startClock() {
   }
   tick();
   setInterval(tick, 1000);
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!currentItems || currentItems.length === 0) {
+    showToast(lang === 'es' ? 'No hay datos para exportar.' : 'No data to export.', 'warn');
+    return;
+  }
+
+  const headers = ['ID', 'Name', 'Country', 'Crimes', 'Reward (USD)', 'Danger Level', 'Nationality', 'Description'];
+  const rows = currentItems.map(item => {
+    const danger = getDangerLevel(item.reward || 0);
+    return [
+      item.id || '',
+      item.name || '',
+      item.country || '',
+      (item.crimes || []).join(' | '),
+      item.reward || 0,
+      danger.en,
+      item.nationality || '',
+      (item.description || '').replace(/"/g, '""'),
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wanted_${selectedCountry || 'world'}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────

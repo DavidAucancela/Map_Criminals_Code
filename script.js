@@ -1,3 +1,24 @@
+// ─── Security helpers ─────────────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function safeUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : '';
+  } catch {
+    return '';
+  }
+}
+
 // ─── World Map (Leaflet) ──────────────────────────────────────────────────────
 
 let worldMap = null;
@@ -132,8 +153,12 @@ function addMarkers(items) {
 
     const color = markerColor(item.reward || 0);
 
-    const photoHtml = item.photo
-      ? `<img src="${item.photo}" alt="${item.name}"
+    const safeName  = escapeHtml(item.name);
+    const safePhoto = safeUrl(item.photo);
+    const safeMoreUrl = safeUrl(item.url);
+
+    const photoHtml = safePhoto
+      ? `<img src="${safePhoto}" alt="${safeName}"
               style="width:56px;height:56px;object-fit:cover;border-radius:6px;
                      border:2px solid rgba(255,255,255,0.2);margin-bottom:6px;"
               onerror="this.src='Imagenes/3167755.png'"/>`
@@ -143,23 +168,23 @@ function addMarkers(items) {
 
     const rewardText = item.reward > 0
       ? `<div style="color:${color};font-weight:700;font-size:0.75rem;margin-top:4px;">
-           $${item.reward.toLocaleString()}
+           $${Number(item.reward).toLocaleString()}
          </div>`
       : '';
 
-    const moreLink = item.url
-      ? `<a href="${item.url}" target="_blank" rel="noopener"
+    const moreLink = safeMoreUrl
+      ? `<a href="${safeMoreUrl}" target="_blank" rel="noopener noreferrer"
               style="color:#90bdff;font-size:0.7rem;font-weight:600;display:block;margin-top:4px;">
            Ver más &rarr;
          </a>`
       : '';
 
-    const topCrime = (item.crimes && item.crimes.length > 0) ? item.crimes[0] : '';
+    const topCrime = (item.crimes && item.crimes.length > 0) ? escapeHtml(item.crimes[0]) : '';
 
     const popupContent = `
       <div style="text-align:center;font-family:'Quicksand',sans-serif;min-width:110px;max-width:160px;">
         ${photoHtml}
-        <div style="font-weight:700;font-size:0.82rem;line-height:1.2;margin-bottom:3px;">${item.name}</div>
+        <div style="font-weight:700;font-size:0.82rem;line-height:1.2;margin-bottom:3px;">${safeName}</div>
         ${topCrime ? `<div style="font-size:0.65rem;color:#a0aec0;margin-bottom:2px;">${topCrime}</div>` : ''}
         ${rewardText}
         ${moreLink}

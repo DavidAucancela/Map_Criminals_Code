@@ -116,22 +116,35 @@ async function fetchFBI() {
   return allItems;
 }
 
+// Sanitize a string param: strip to plain text, limit length
+function sanitizeStr(val, maxLen = 100) {
+  if (typeof val !== 'string') return '';
+  return val.replace(/[<>"'`]/g, '').trim().slice(0, maxLen);
+}
+
+// Valid ISO country codes supported by the app
+const VALID_COUNTRIES = new Set(['EC','CO','PE','MX','BR','AR','VE','CL','US']);
+const VALID_SOURCES   = new Set(['all', 'fbi', 'manual']);
+
 // GET /api/wanted
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const search = (req.query.search || '').toLowerCase().trim();
-    const sourceFilter = req.query.source || 'all';
-    const crimeFilter = req.query.crime || '';
-    const nationalityFilter = req.query.nationality || '';
-    const countryFilter = (req.query.country || '').toUpperCase();
+    const page  = Math.max(1, Math.min(100, parseInt(req.query.page)  || 1));
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
+    const search = sanitizeStr(req.query.search).toLowerCase();
+    const rawSource  = sanitizeStr(req.query.source);
+    const sourceFilter = VALID_SOURCES.has(rawSource) ? rawSource : 'all';
+    const crimeFilter = sanitizeStr(req.query.crime);
+    const nationalityFilter = sanitizeStr(req.query.nationality);
+    const rawCountry = sanitizeStr(req.query.country).toUpperCase();
+    const countryFilter = VALID_COUNTRIES.has(rawCountry) ? rawCountry : '';
 
     const manualItems = loadManual();
     let fbiItems = [];
 
-    // Only hit FBI API when needed — non-US country filter skips entirely (<50ms)
-    const needsFBI = !countryFilter || countryFilter === 'US' || sourceFilter === 'fbi';
+    // Only hit FBI API when needed — non-US country filter or manual-only source skips entirely (<50ms)
+    const needsFBI = (countryFilter === 'US' || sourceFilter === 'fbi') ||
+                     (!countryFilter && sourceFilter !== 'manual');
     if (needsFBI) {
       fbiItems = await fetchFBI();
     }
@@ -179,7 +192,9 @@ router.get('/', async (req, res) => {
     const offset = (page - 1) * limit;
     const items = all.slice(offset, offset + limit);
 
-    res.set('Cache-Control', 'no-store');
+    // Short public cache for non-real-time endpoints; US data refreshes from FBI API so keep short
+    const ttl = countryFilter === 'US' ? 60 : 300;
+    res.set('Cache-Control', `public, max-age=${ttl}`);
     res.json({
       total,
       page,

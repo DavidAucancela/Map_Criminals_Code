@@ -32,7 +32,8 @@
         <span class="live-badge"><span class="blink-dot">◉</span> EN VIVO</span>
         <span class="nav-clock" id="nav-clock">00:00:00</span>
       </div>
-      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()"
+              aria-label="Switch language / Cambiar idioma">EN</button>
     </div>
   </nav>
 
@@ -50,7 +51,7 @@
     </div>
 
     <!-- Country flag grid -->
-    <div class="country-grid" id="country-grid">
+    <div class="country-grid" id="country-grid" role="group" aria-label="Seleccionar país / Select country">
       <!-- Populated by app.js -->
     </div>
 
@@ -59,14 +60,15 @@
       <div class="result-header" id="result-header"></div>
 
       <!-- Filter bar -->
-      <div class="filter-bar" id="filter-bar">
+      <div class="filter-bar" id="filter-bar" role="search" aria-label="Filtros / Filters">
         <input type="text" id="filter-name" class="filter-input"
-               placeholder="Buscar por nombre…"/>
+               placeholder="Buscar por nombre…"
+               aria-label="Buscar por nombre / Search by name"/>
         <div class="filter-row">
-          <select id="filter-crime" class="filter-select">
+          <select id="filter-crime" class="filter-select" aria-label="Filtrar por crimen / Filter by crime">
             <option value="">Todos los crímenes</option>
           </select>
-          <select id="filter-danger" class="filter-select">
+          <select id="filter-danger" class="filter-select" aria-label="Filtrar por nivel de peligro / Filter by danger level">
             <option value=""         data-i18n="filter_danger_all">Todos los niveles</option>
             <option value="CRITICAL" data-i18n="filter_danger_critical">CRÍTICO</option>
             <option value="HIGH"     data-i18n="filter_danger_high">ALTO</option>
@@ -75,8 +77,14 @@
             <option value="MIN"      data-i18n="filter_danger_min">MÍN</option>
           </select>
         </div>
-        <button id="filter-reset" class="filter-reset-btn"
-                data-i18n="filter_reset">Limpiar</button>
+        <div class="filter-actions">
+          <button id="filter-reset" class="filter-reset-btn"
+                  data-i18n="filter_reset" aria-label="Limpiar filtros / Reset filters">Limpiar</button>
+          <button id="export-csv-btn" class="export-btn" onclick="exportCSV()"
+                  aria-label="Exportar resultados como CSV / Export results as CSV">
+            ↓ CSV
+          </button>
+        </div>
       </div>
 
       <div class="panel-loading" id="panel-loading" style="display:none;">
@@ -86,6 +94,9 @@
     </div>
 
   </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Scripts -->
   <script src="script.js"></script>
