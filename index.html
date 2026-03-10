@@ -32,7 +32,8 @@
         <span class="live-badge"><span class="blink-dot">◉</span> EN VIVO</span>
         <span class="nav-clock" id="nav-clock">00:00:00</span>
       </div>
-      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()"
+              aria-label="Switch language / Cambiar idioma">EN</button>
     </div>
   </nav>
 
@@ -50,7 +51,7 @@
     </div>
 
     <!-- Country flag grid -->
-    <div class="country-grid" id="country-grid">
+    <div class="country-grid" id="country-grid" role="group" aria-label="Seleccionar país / Select country">
       <!-- Populated by app.js -->
     </div>
 
@@ -59,14 +60,15 @@
       <div class="result-header" id="result-header"></div>
 
       <!-- Filter bar -->
-      <div class="filter-bar" id="filter-bar">
+      <div class="filter-bar" id="filter-bar" role="search" aria-label="Filtros / Filters">
         <input type="text" id="filter-name" class="filter-input"
-               placeholder="Buscar por nombre…"/>
+               placeholder="Buscar por nombre…"
+               aria-label="Buscar por nombre / Search by name"/>
         <div class="filter-row">
-          <select id="filter-crime" class="filter-select">
+          <select id="filter-crime" class="filter-select" aria-label="Filtrar por crimen / Filter by crime">
             <option value="">Todos los crímenes</option>
           </select>
-          <select id="filter-danger" class="filter-select">
+          <select id="filter-danger" class="filter-select" aria-label="Filtrar por nivel de peligro / Filter by danger level">
             <option value=""         data-i18n="filter_danger_all">Todos los niveles</option>
             <option value="CRITICAL" data-i18n="filter_danger_critical">CRÍTICO</option>
             <option value="HIGH"     data-i18n="filter_danger_high">ALTO</option>
@@ -75,17 +77,81 @@
             <option value="MIN"      data-i18n="filter_danger_min">MÍN</option>
           </select>
         </div>
-        <button id="filter-reset" class="filter-reset-btn"
-                data-i18n="filter_reset">Limpiar</button>
+        <div class="sort-row">
+          <select id="sort-select" class="filter-select" aria-label="Ordenar resultados / Sort results">
+            <option value="reward"  data-i18n="sort_reward">Mayor recompensa</option>
+            <option value="danger"  data-i18n="sort_danger">Más peligroso</option>
+            <option value="name"    data-i18n="sort_name">Nombre A-Z</option>
+            <option value="country" data-i18n="sort_country">País</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="filter-reset" class="filter-reset-btn"
+                  data-i18n="filter_reset" aria-label="Limpiar filtros / Reset filters">Limpiar</button>
+          <button id="export-csv-btn" class="export-btn" onclick="exportCSV()"
+                  aria-label="Exportar resultados como CSV / Export results as CSV">
+            <i class="fas fa-download" aria-hidden="true"></i> CSV
+          </button>
+        </div>
       </div>
 
       <div class="panel-loading" id="panel-loading" style="display:none;">
         <div class="mini-spinner"></div>
       </div>
       <div class="wanted-list" id="wanted-list"></div>
+      <div class="panel-stats" id="panel-stats" style="display:none;"></div>
     </div>
 
   </div>
+
+  <!-- ─── Detail Modal ───────────────────────────────────── -->
+  <div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true"
+       aria-labelledby="modal-name-heading">
+    <div class="modal-box">
+
+      <!-- Close button -->
+      <button class="modal-close-btn" id="modal-close" aria-label="Cerrar / Close">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+
+      <!-- Left: photo + badge -->
+      <div class="modal-left">
+        <div class="modal-photo-frame">
+          <div class="modal-wanted-label" id="modal-wanted-label">BUSCADO</div>
+          <div class="modal-photo-wrap">
+            <img class="modal-photo" id="modal-photo-img" alt="" loading="lazy"/>
+            <div class="modal-photo-ph" id="modal-photo-ph">
+              <i class="fas fa-user-secret" aria-hidden="true"></i>
+            </div>
+          </div>
+        </div>
+        <div class="modal-danger-badge" id="modal-danger-badge"></div>
+        <div class="modal-reward-display" id="modal-reward-display"></div>
+      </div>
+
+      <!-- Right: info -->
+      <div class="modal-right">
+        <h2 class="modal-name" id="modal-name-heading"></h2>
+        <div class="modal-meta" id="modal-meta"></div>
+
+        <div class="modal-section">
+          <div class="modal-section-title" id="modal-crimes-title">Crímenes</div>
+          <div class="modal-crimes-list" id="modal-crimes-list"></div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title" id="modal-desc-title">Descripción</div>
+          <div class="modal-desc-text" id="modal-desc-text"></div>
+        </div>
+
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Scripts -->
   <script src="script.js"></script>
