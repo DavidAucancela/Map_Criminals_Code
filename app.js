@@ -67,6 +67,22 @@ const TRANSLATIONS = {
     filter_danger_low: 'BAJO',
     filter_danger_min: 'MÍN',
     filter_reset: 'Limpiar',
+    sort_reward: 'Mayor recompensa',
+    sort_name: 'Nombre A-Z',
+    sort_danger: 'Más peligroso',
+    sort_country: 'País',
+    stats_records: 'registros',
+    stats_total_reward: 'en recompensas',
+    modal_crimes: 'Crímenes',
+    modal_nationality: 'Nacionalidad',
+    modal_description: 'Descripción',
+    modal_view_map: 'Ver en mapa',
+    modal_more_info: 'Más información',
+    modal_close: 'Cerrar',
+    modal_copy: 'Copiar ficha',
+    modal_copied: '¡Copiado!',
+    modal_no_desc: 'Sin descripción disponible.',
+    wanted_label: 'BUSCADO',
   },
   en: {
     title: "World's Most Wanted",
@@ -94,6 +110,22 @@ const TRANSLATIONS = {
     filter_danger_low: 'LOW',
     filter_danger_min: 'MIN',
     filter_reset: 'Reset',
+    sort_reward: 'Highest reward',
+    sort_name: 'Name A-Z',
+    sort_danger: 'Most dangerous',
+    sort_country: 'Country',
+    stats_records: 'records',
+    stats_total_reward: 'in rewards',
+    modal_crimes: 'Crimes',
+    modal_nationality: 'Nationality',
+    modal_description: 'Description',
+    modal_view_map: 'View on map',
+    modal_more_info: 'More info',
+    modal_close: 'Close',
+    modal_copy: 'Copy profile',
+    modal_copied: 'Copied!',
+    modal_no_desc: 'No description available.',
+    wanted_label: 'WANTED',
   },
 };
 
@@ -135,6 +167,21 @@ let manualData = [];
 let filterName   = '';
 let filterCrime  = '';
 let filterDanger = '';
+let sortBy       = 'reward';
+let detailItem   = null;
+
+// ─── Search highlight ─────────────────────────────────────────────────────────
+function highlightText(text, query) {
+  if (!text) return '';
+  if (!query) return escapeHtml(text);
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return escapeHtml(text);
+  return (
+    escapeHtml(text.slice(0, idx)) +
+    '<mark class="hl">' + escapeHtml(text.slice(idx, idx + query.length)) + '</mark>' +
+    escapeHtml(text.slice(idx + query.length))
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function countryDisplayName(code) {
@@ -219,6 +266,17 @@ function applyFilters() {
     items = items.filter(p => getDangerLevel(p.reward || 0).en === filterDanger);
   }
 
+  // Sort
+  if (sortBy === 'name') {
+    items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } else if (sortBy === 'danger') {
+    items.sort((a, b) => getDangerLevel(b.reward || 0).score - getDangerLevel(a.reward || 0).score);
+  } else if (sortBy === 'country') {
+    items.sort((a, b) => (a.country || '').localeCompare(b.country || ''));
+  } else {
+    items.sort((a, b) => (b.reward || 0) - (a.reward || 0)); // default: reward desc
+  }
+
   currentItems = items;
 
   const headerEl = document.getElementById('result-header');
@@ -299,24 +357,43 @@ function selectCountry(code) {
 
 // ─── Render mini-cards ────────────────────────────────────────────────────────
 function renderWantedList(items) {
-  const listEl = document.getElementById('wanted-list');
+  const listEl  = document.getElementById('wanted-list');
+  const statsEl = document.getElementById('panel-stats');
 
   if (!items || items.length === 0) {
     listEl.innerHTML = `<div class="panel-empty">${t('no_results')}</div>`;
+    if (statsEl) statsEl.style.display = 'none';
     return;
   }
 
   listEl.innerHTML = items.map((item, idx) => buildMiniCard(item, idx)).join('');
+
+  // Stats footer
+  if (statsEl) {
+    const totalReward = items.reduce((acc, i) => acc + (i.reward || 0), 0);
+    const rewardStr = totalReward > 0 ? `$${totalReward.toLocaleString()} ${t('stats_total_reward')}` : '';
+    statsEl.innerHTML = `
+      <span class="stats-count">${items.length} ${t('stats_records')}</span>
+      ${rewardStr ? `<span class="stats-reward">${rewardStr}</span>` : ''}
+    `;
+    statsEl.style.display = 'flex';
+  }
 }
 
 function buildMiniCard(item, idx) {
   const safeName  = escapeHtml(item.name);
   const safePhoto = safeUrl(item.photo);
+  const hlName = highlightText(item.name, filterName);
+
   const photoEl = safePhoto
-    ? `<img class="mini-photo" src="${safePhoto}" alt="${safeName}" onerror="this.outerHTML='<div class=\\'mini-photo-placeholder\\'>👤</div>'" loading="lazy"/>`
-    : `<div class="mini-photo-placeholder">👤</div>`;
+    ? `<img class="mini-photo" src="${safePhoto}" alt="${safeName}"
+          style="border-color:${getDangerLevel(item.reward||0).color}33"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy"/>
+       <div class="mini-photo-placeholder" style="display:none"><i class="fas fa-user-secret" aria-hidden="true"></i></div>`
+    : `<div class="mini-photo-placeholder"><i class="fas fa-user-secret" aria-hidden="true"></i></div>`;
 
   const topCrime = (item.crimes && item.crimes.length > 0) ? escapeHtml(item.crimes[0]) : '—';
+  const crimeCount = item.crimes ? item.crimes.length : 0;
 
   const reward = item.reward || 0;
   const danger = getDangerLevel(reward);
@@ -329,25 +406,148 @@ function buildMiniCard(item, idx) {
 
   const barPct = Math.min(100, (reward / 10000000) * 100).toFixed(1);
 
-  const hasCoords = item.lat != null && item.lng != null;
-  const clickHandler = hasCoords
-    ? `onclick="zoomToMarker(${item.lat}, ${item.lng})"`
-    : '';
+  const countryFlag = COUNTRIES[item.country] ? COUNTRIES[item.country].flag : '';
 
   return `
-    <div class="mini-card" ${clickHandler} title="${safeName}" style="--i:${idx}">
-      ${photoEl}
+    <div class="mini-card" onclick="openDetailModal(${idx})" title="${safeName}" style="--i:${idx};--dc:${danger.color}">
+      <div class="mini-photo-wrap">
+        ${photoEl}
+        <div class="mini-threat-ring" style="border-color:${danger.color}44"></div>
+      </div>
       <div class="mini-info">
         <div class="mini-name-row">
-          <div class="mini-name">${safeName}</div>
+          <div class="mini-name">${hlName}</div>
           <span class="danger-badge" style="color:${danger.color};background:${danger.bg}">${dangerLabel}</span>
         </div>
-        <div class="mini-crime">${topCrime}</div>
-        <span class="${rewardClass}">${rewardText}</span>
+        <div class="mini-crime">${topCrime}${crimeCount > 1 ? ` <span class="crime-more">+${crimeCount-1}</span>` : ''}</div>
+        <div class="mini-bottom-row">
+          <span class="${rewardClass}">${rewardText}</span>
+          <span class="mini-country-tag">${countryFlag}</span>
+        </div>
         ${reward > 0 ? `<div class="reward-bar"><div class="reward-bar-fill" style="width:${barPct}%;background:${danger.color}"></div></div>` : ''}
       </div>
     </div>
   `;
+}
+
+// ─── Detail modal ─────────────────────────────────────────────────────────────
+function openDetailModal(idx) {
+  const item = currentItems[idx];
+  if (!item) return;
+  detailItem = item;
+
+  const modal   = document.getElementById('detail-modal');
+  const danger  = getDangerLevel(item.reward || 0);
+  const safeName = escapeHtml(item.name);
+  const safePhoto = safeUrl(item.photo);
+  const country = COUNTRIES[item.country];
+
+  // Wanted label
+  document.getElementById('modal-wanted-label').textContent = t('wanted_label');
+
+  // Photo
+  const photoImg = document.getElementById('modal-photo-img');
+  const photoPh  = document.getElementById('modal-photo-ph');
+  if (safePhoto) {
+    photoImg.src = safePhoto;
+    photoImg.alt = safeName;
+    photoImg.style.display = 'block';
+    photoPh.style.display  = 'none';
+    photoImg.onerror = () => { photoImg.style.display='none'; photoPh.style.display='flex'; };
+  } else {
+    photoImg.style.display = 'none';
+    photoPh.style.display  = 'flex';
+  }
+
+  // Danger badge
+  const badgeEl = document.getElementById('modal-danger-badge');
+  badgeEl.textContent = lang === 'es' ? danger.es : danger.en;
+  badgeEl.style.color      = danger.color;
+  badgeEl.style.borderColor = danger.color;
+  badgeEl.style.background  = danger.bg;
+
+  // Reward
+  const rewardEl = document.getElementById('modal-reward-display');
+  rewardEl.textContent = item.reward > 0
+    ? `$${Number(item.reward).toLocaleString()}`
+    : t('no_reward');
+  rewardEl.style.color = item.reward > 0 ? danger.color : '#718096';
+
+  // Name
+  document.getElementById('modal-name-heading').textContent = item.name;
+
+  // Meta (country + nationality)
+  const metaEl = document.getElementById('modal-meta');
+  const flagStr = country ? `${country.flag} ${lang === 'es' ? country.name : country.nameEN}` : (item.country || '');
+  metaEl.innerHTML = `
+    <span class="modal-meta-item">${flagStr}</span>
+    ${item.nationality ? `<span class="modal-meta-sep">•</span><span class="modal-meta-item">${escapeHtml(item.nationality)}</span>` : ''}
+  `;
+
+  // Crimes
+  document.getElementById('modal-crimes-title').textContent = t('modal_crimes');
+  const crimes = item.crimes || [];
+  document.getElementById('modal-crimes-list').innerHTML = crimes.length > 0
+    ? crimes.map(c => `<span class="crime-chip">${escapeHtml(c)}</span>`).join('')
+    : '<span class="modal-no-data">—</span>';
+
+  // Description
+  document.getElementById('modal-desc-title').textContent = t('modal_description');
+  document.getElementById('modal-desc-text').textContent = item.description || t('modal_no_desc');
+
+  // Actions
+  const actionsEl = document.getElementById('modal-actions');
+  const hasCoords = item.lat != null && item.lng != null;
+  actionsEl.innerHTML = `
+    ${hasCoords ? `<button class="modal-action-btn primary" onclick="closeDetailModal();zoomToMarker(${item.lat},${item.lng})">
+      <i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${t('modal_view_map')}
+    </button>` : ''}
+    ${safeUrl(item.url) ? `<a class="modal-action-btn" href="${safeUrl(item.url)}" target="_blank" rel="noopener noreferrer">
+      <i class="fas fa-external-link-alt" aria-hidden="true"></i> ${t('modal_more_info')}
+    </a>` : ''}
+    <button class="modal-action-btn" id="modal-copy-btn" onclick="copyItemInfo()">
+      <i class="fas fa-copy" aria-hidden="true"></i> <span id="modal-copy-label">${t('modal_copy')}</span>
+    </button>
+  `;
+
+  // Frame color from danger level
+  document.querySelector('.modal-photo-frame').style.borderColor = danger.color + '88';
+  document.querySelector('.modal-photo-frame').style.boxShadow = `0 0 24px ${danger.color}33`;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  const modal = document.getElementById('detail-modal');
+  if (!modal) return;
+  modal.classList.remove('visible');
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  detailItem = null;
+}
+
+function copyItemInfo() {
+  if (!detailItem) return;
+  const danger = getDangerLevel(detailItem.reward || 0);
+  const lines = [
+    `${t('wanted_label')}: ${detailItem.name}`,
+    `${lang === 'es' ? 'País' : 'Country'}: ${detailItem.country || ''}`,
+    detailItem.nationality ? `${t('modal_nationality')}: ${detailItem.nationality}` : '',
+    `${t('modal_crimes')}: ${(detailItem.crimes || []).join(', ')}`,
+    `${t('reward_label')}: ${detailItem.reward > 0 ? '$' + Number(detailItem.reward).toLocaleString() : t('no_reward')}`,
+    `${lang === 'es' ? 'Nivel' : 'Level'}: ${lang === 'es' ? danger.es : danger.en}`,
+    detailItem.description ? `\n${t('modal_description')}: ${detailItem.description}` : '',
+  ].filter(Boolean).join('\n');
+
+  navigator.clipboard.writeText(lines).then(() => {
+    const label = document.getElementById('modal-copy-label');
+    if (label) {
+      label.textContent = t('modal_copied');
+      setTimeout(() => { label.textContent = t('modal_copy'); }, 2000);
+    }
+  }).catch(() => showToast(lang === 'es' ? 'No se pudo copiar.' : 'Could not copy.', 'warn'));
 }
 
 // ─── Language toggle ──────────────────────────────────────────────────────────
@@ -454,4 +654,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (resetBtn) {
     resetBtn.addEventListener('click', resetFilters);
   }
+
+  // Sort
+  const sortSelect = document.getElementById('sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', e => {
+      sortBy = e.target.value;
+      applyFilters();
+    });
+  }
+
+  // Modal close button
+  const modalCloseBtn = document.getElementById('modal-close');
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeDetailModal);
+
+  // Modal overlay click to close
+  const modalOverlay = document.getElementById('detail-modal');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) closeDetailModal();
+    });
+  }
+
+  // Keyboard: ESC closes modal or deselects country
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('detail-modal');
+      if (modal && modal.classList.contains('visible')) {
+        closeDetailModal();
+      } else if (selectedCountry) {
+        selectCountry(selectedCountry); // toggle off
+      }
+    }
+  });
 });

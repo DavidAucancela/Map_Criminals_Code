@@ -77,12 +77,20 @@
             <option value="MIN"      data-i18n="filter_danger_min">MÍN</option>
           </select>
         </div>
+        <div class="sort-row">
+          <select id="sort-select" class="filter-select" aria-label="Ordenar resultados / Sort results">
+            <option value="reward"  data-i18n="sort_reward">Mayor recompensa</option>
+            <option value="danger"  data-i18n="sort_danger">Más peligroso</option>
+            <option value="name"    data-i18n="sort_name">Nombre A-Z</option>
+            <option value="country" data-i18n="sort_country">País</option>
+          </select>
+        </div>
         <div class="filter-actions">
           <button id="filter-reset" class="filter-reset-btn"
                   data-i18n="filter_reset" aria-label="Limpiar filtros / Reset filters">Limpiar</button>
           <button id="export-csv-btn" class="export-btn" onclick="exportCSV()"
                   aria-label="Exportar resultados como CSV / Export results as CSV">
-            ↓ CSV
+            <i class="fas fa-download" aria-hidden="true"></i> CSV
           </button>
         </div>
       </div>
@@ -91,8 +99,55 @@
         <div class="mini-spinner"></div>
       </div>
       <div class="wanted-list" id="wanted-list"></div>
+      <div class="panel-stats" id="panel-stats" style="display:none;"></div>
     </div>
 
+  </div>
+
+  <!-- ─── Detail Modal ───────────────────────────────────── -->
+  <div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true"
+       aria-labelledby="modal-name-heading">
+    <div class="modal-box">
+
+      <!-- Close button -->
+      <button class="modal-close-btn" id="modal-close" aria-label="Cerrar / Close">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+
+      <!-- Left: photo + badge -->
+      <div class="modal-left">
+        <div class="modal-photo-frame">
+          <div class="modal-wanted-label" id="modal-wanted-label">BUSCADO</div>
+          <div class="modal-photo-wrap">
+            <img class="modal-photo" id="modal-photo-img" alt="" loading="lazy"/>
+            <div class="modal-photo-ph" id="modal-photo-ph">
+              <i class="fas fa-user-secret" aria-hidden="true"></i>
+            </div>
+          </div>
+        </div>
+        <div class="modal-danger-badge" id="modal-danger-badge"></div>
+        <div class="modal-reward-display" id="modal-reward-display"></div>
+      </div>
+
+      <!-- Right: info -->
+      <div class="modal-right">
+        <h2 class="modal-name" id="modal-name-heading"></h2>
+        <div class="modal-meta" id="modal-meta"></div>
+
+        <div class="modal-section">
+          <div class="modal-section-title" id="modal-crimes-title">Crímenes</div>
+          <div class="modal-crimes-list" id="modal-crimes-list"></div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title" id="modal-desc-title">Descripción</div>
+          <div class="modal-desc-text" id="modal-desc-text"></div>
+        </div>
+
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+
+    </div>
   </div>
 
   <!-- Toast container -->
