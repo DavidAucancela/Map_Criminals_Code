@@ -23,7 +23,7 @@
     "nationality": "Ecuatoriana",
     "lat": -0.9319,
     "lng": -78.6152,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Fabricio_Col%C3%B3n_Pico.jpg/220px-Fabricio_Col%C3%B3n_Pico.jpg"
   },
   {
     "id": "ec-003",
@@ -75,7 +75,7 @@
     "nationality": "Colombiana",
     "lat": 1.6,
     "lng": -75.9,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ivan_Mordisco_FARC.jpg/220px-Ivan_Mordisco_FARC.jpg"
   },
   {
     "id": "co-002",
@@ -140,7 +140,7 @@
     "nationality": "Peruana",
     "lat": -12.3,
     "lng": -73.9,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Jorge_Quispe_Palomino.jpg/220px-Jorge_Quispe_Palomino.jpg"
   },
   {
     "id": "pe-002",
@@ -192,7 +192,7 @@
     "nationality": "Mexicana",
     "lat": 20.6597,
     "lng": -103.3496,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/El_Mencho_%28Nemesio_Oseguera_Cervantes%29.jpg/220px-El_Mencho_%28Nemesio_Oseguera_Cervantes%29.jpg"
   },
   {
     "id": "mx-002",
@@ -205,7 +205,7 @@
     "nationality": "Mexicana",
     "lat": 29.07,
     "lng": -110.95,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Rafael_Caro_Quintero.jpg/220px-Rafael_Caro_Quintero.jpg"
   },
   {
     "id": "mx-003",
@@ -231,7 +231,7 @@
     "nationality": "Mexicana",
     "lat": 24.8,
     "lng": -107.4,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/D%C3%A1maso_L%C3%B3pez_Serrano.jpg/220px-D%C3%A1maso_L%C3%B3pez_Serrano.jpg"
   },
   {
     "id": "mx-005",
@@ -244,7 +244,7 @@
     "nationality": "Mexicana",
     "lat": 25.4,
     "lng": -108.0,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Sandra_%C3%81vila_Beltr%C3%A1n.jpg/220px-Sandra_%C3%81vila_Beltr%C3%A1n.jpg"
   },
   {
     "id": "br-001",
@@ -322,7 +322,7 @@
     "nationality": "Argentina",
     "lat": -32.95,
     "lng": -60.63,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ariel_Cantero.jpg/220px-Ariel_Cantero.jpg"
   },
   {
     "id": "ar-003",
@@ -348,7 +348,7 @@
     "nationality": "Venezolana",
     "lat": 10.462,
     "lng": -66.918,
-    "photo": ""
+    "photo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Carlos_Luis_Revete_El_Koki.jpg/220px-Carlos_Luis_Revete_El_Koki.jpg"
   },
   {
     "id": "ve-002",
@@ -426,7 +426,7 @@
     "nationality": "Estadounidense",
     "lat": 33.4484,
     "lng": -112.0740,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/jason-derek-brown/@@images/image/preview"
   },
   {
     "id": "us-002",
@@ -439,7 +439,7 @@
     "nationality": "Estadounidense",
     "lat": 33.6695,
     "lng": -111.9244,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/robert-william-fisher/@@images/image/preview"
   },
   {
     "id": "us-003",
@@ -452,7 +452,7 @@
     "nationality": "India (residente EE.UU.)",
     "lat": 37.6872,
     "lng": -97.3301,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/bhadreshkumar-chetanbhai-patel/@@images/image/preview"
   },
   {
     "id": "us-004",
@@ -465,7 +465,7 @@
     "nationality": "Estadounidense",
     "lat": 41.2009,
     "lng": -73.9568,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/eugene-palmer/@@images/image/preview"
   },
   {
     "id": "us-005",
@@ -478,7 +478,7 @@
     "nationality": "Hondureña",
     "lat": 39.9526,
     "lng": -75.1652,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/alexis-flores/@@images/image/preview"
   },
   {
     "id": "us-006",
@@ -491,7 +491,7 @@
     "nationality": "Estadounidense",
     "lat": 41.8781,
     "lng": -87.6298,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/arnoldo-jimenez/@@images/image/preview"
   },
   {
     "id": "us-007",
@@ -504,6 +504,6 @@
     "nationality": "Mexicana",
     "lat": 32.5149,
     "lng": -117.0382,
-    "photo": ""
+    "photo": "https://www.fbi.gov/wanted/topten/rafael-caro-quintero/@@images/image/preview"
   }
 ]
